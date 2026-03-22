@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Upper Room Invitation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --white: #ffffff;
+            --union-glow: #d4bf79;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --fade-speed: 0.6s;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--white);
+            overflow: hidden; /* body never scrolls — each page scrolls itself */
+        }
+
+        /* ============================================================
+           PAGE LAYER SYSTEM
+           All three pages are position:fixed, stacked by z-index.
+           Transitions are fade only — no transforms, no scroll-center issues.
+        ============================================================ */
+
+        /* Shared fade base */
+        .fade-page {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1; /* hidden pages sit below everything */
+            transition: opacity var(--fade-speed) ease, visibility var(--fade-speed) ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .fade-page.visible {
+            opacity: 1;
+            z-index: 20; /* visible page always wins z-index */
+            visibility: visible;
+        }
+
+        /* --- PAGE 1: HOMESCREEN --- */
+        #homescreen {
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            /* Homescreen starts visible */
+            opacity: 1;
+            visibility: visible;
+            z-index: 1;
+        }
+
+        /* --- PAGE 2: MAIN LANDING PAGE --- */
+        #main-page {
+            background: linear-gradient(to bottom,
+                var(--white)    0%,
+                #f0f0f0        15%,
+                #777           48%,
+                #222           52%,
+                #0a0a0a        85%,
+                var(--bg-dark)  100%);
+            /* Scrolls from the top — no centering wrapper needed */
+        }
+
+        /* --- PAGE 3: DETAIL PAGE --- */
+        #detail-page {
+            background: #000;
+            padding: 60px;
+        }
+
+        /* ============================================================
+           MAIN PAGE — INNER CONTENT
+           padding-top gives breathing room from the top of the scroll.
+           No justify-content: center so content always starts at top.
+        ============================================================ */
+        .main-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 80px 20px 60px;
+            position: relative; /* for .intersection-glow */
+        }
+
+        /* ============================================================
+           PULSING CENTER BURST
+        ============================================================ */
+        .intersection-glow {
+            position: absolute;
+            top: 280px; /* fixed visual position, not percentage-based */
+            left: 50%;
+            width: 140%;
+            height: 250px;
+            transform: translateX(-50%);
+            background: radial-gradient(circle,
+                rgba(212, 191, 121, 0.6) 0%,
+                rgba(212, 191, 121, 0.2) 50%,
+                rgba(0,0,0,0) 85%);
+            filter: blur(60px);
+            pointer-events: none;
+            animation: pulseBurst 4s infinite ease-in-out;
+        }
+
+        @keyframes pulseBurst {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50%       { opacity: 1;   transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* ============================================================
+           HOMESCREEN TYPOGRAPHY
+        ============================================================ */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 5.5rem;
+            letter-spacing: 6px;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--white);
+        }
+
+        /* ============================================================
+           MAIN PAGE — DEFINITION SECTIONS
+        ============================================================ */
+        .def-section {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+            padding: 0 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .top-def    { color: #000; }
+        .bottom-def { color: #fff; }
+
+        .greek-word {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--union-glow);
+            margin-bottom: 15px;
+        }
+
+        .definition-text {
+            font-size: 1.8rem;
+            line-height: 1.5;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        /* ============================================================
+           MAIN PAGE — TILE GRID
+        ============================================================ */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+            z-index: 2;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .tile {
+            width: 100%;
+            max-width: 300px;
+            height: 160px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(212, 191, 121, 0.4);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            padding: 20px;
+            justify-self: center;
+            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .tile:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tile h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.3rem;
+            margin: 0;
+            color: var(--union-glow);
+        }
+
+        .tile p {
+            font-size: 1rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-top: 15px;
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* ============================================================
+           DETAIL PAGE — CONTENT
+        ============================================================ */
+        .back-btn {
+            color: var(--white);
+            opacity: 0.7;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            display: inline-block;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        .back-btn:hover { opacity: 1; }
+
+        #detail-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            color: var(--white);
+            margin: 0 0 40px 0;
+        }
+
+        .content-card,
+        .practice-card {
+            border: 1px solid var(--white);
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .card-label {
+            text-transform: uppercase;
+            color: var(--white);
+            margin: 0 0 20px 0;
+            letter-spacing: 4px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .card-body {
+            line-height: 1.8;
+            color: #ffffff;
+            font-size: 1.4rem;
+        }
+
+        .spotify-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.3);
+            min-height: 152px;
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ============================================================
+           SHARED BUTTON
+        ============================================================ */
+        .btn {
+            background: none;
+            border: 2px solid white;
+            color: white;
+            padding: 22px 65px;
+            cursor: pointer;
+            letter-spacing: 5px;
+            transition: background 0.4s, color 0.4s;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn:hover { background: white; color: black; }
+
+        .btn-secondary {
+            border-color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+            padding: 12px 30px;
+            margin-top: 40px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+        ============================================================ */
+        @media (max-width: 900px) {
+            h1 {
+                font-size: 3rem;
+                letter-spacing: 3px;
+            }
+
+            .greek-word      { font-size: 2.5rem; }
+            .definition-text { font-size: 1.3rem; }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .tile {
+                max-width: 80vw;
+                height: auto;
+                min-height: 120px;
+            }
+
+            #detail-page { padding: 30px 20px; }
+
+            .content-card,
+            .practice-card { padding: 25px 20px; }
+
+            .btn { padding: 16px 40px; font-size: 1rem; }
+
+            #detail-title { font-size: 2.8rem; }
+
+            .intersection-glow { top: 350px; }
+        }
+
+        @media (max-width: 480px) {
+            h1           { font-size: 2.2rem; }
+            .tile h3     { font-size: 1.8rem; }
+            .def-section { padding: 0 16px; }
+            .main-inner  { padding: 60px 16px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         PAGE 1 — HOMESCREEN
+    ============================================================ -->
+    <div id="homescreen" class="fade-page visible">
+        <h1>The Upper Room Invitation</h1>
+        <button type="button" class="btn" onclick="goToMain()">
+            Enter into Union
+        </button>
+    </div>
+
+    <!-- ============================================================
+         PAGE 2 — MAIN LANDING PAGE
+         Scrolls from the top via overflow-y: auto on .fade-page.
+         .main-inner holds all content with top padding for breathing room.
+    ============================================================ -->
+    <div id="main-page" class="fade-page">
+        <div class="main-inner">
+
+            <div class="intersection-glow"></div>
+
+            <div class="def-section top-def">
+                <div class="greek-word">Love</div>
+                <p class="definition-text">Placeholder 1</p>
+            </div>
+
+            <div class="grid-container">
+                <!-- Row 1 -->
+                <div class="tile" onclick="openDetail('Father', 'Placeholder 2', 'Placeholder 3', '')">
+                    <h3>Father</h3><p>Placeholder 4</p>
+                </div>
+                <div class="tile" onclick="openDetail('Son', 'Placeholder 5', 'Placeholder 6', '')">
+                    <h3>Son</h3><p>Placeholder 7</p>
+                </div>
+                <div class="tile" onclick="openDetail('Spirit', 'Placeholder 8', 'Placeholder 9', '')">
+                    <h3>Spirit</h3><p>Placeholder 10</p>
+                </div>
+                <!-- Row 2 -->
+                <div class="tile" onclick="openDetail('Father', 'Placeholder 11', 'Placeholder 12', '')">
+                    <h3>Father</h3><p>Placeholder 13</p>
+                </div>
+                <div class="tile" onclick="openDetail('Son', 'Placeholder 14', 'Placeholder 15', '')">
+                    <h3>Son</h3><p>Placeholder 16</p>
+                </div>
+                <div class="tile" onclick="openDetail('Spirit', 'Placeholder 17', 'Placeholder 18', '')">
+                    <h3>Spirit</h3><p>Placeholder 19</p>
+                </div>
+            </div>
+
+            <div class="def-section bottom-def">
+                <div class="greek-word">Obey</div>
+                <p class="definition-text">Placeholder 20</p>
+            </div>
+
+            <button type="button" class="btn btn-secondary" onclick="goHome()">
+                Return Home
+            </button>
+
+        </div><!-- /.main-inner -->
+    </div><!-- /#main-page -->
+
+    <!-- ============================================================
+         PAGE 3 — DETAIL PAGE
+         Independent scroll context, z-index: 100.
+    ============================================================ -->
+    <div id="detail-page" class="fade-page">
+        <div class="back-btn" onclick="closeDetail()">← Back to Union</div>
+
+        <h2 id="detail-title"></h2>
+
+        <div class="content-card">
+            <div class="card-label">Placeholder 21</div>
+            <div id="detail-text" class="card-body"></div>
+        </div>
+
+        <div class="practice-card">
+            <div class="card-label">Placeholder 22</div>
+            <div id="practice-text" class="card-body"></div>
+        </div>
+
+        <div id="spotify-slot" class="spotify-container">
+            Spotify Placeholder (Link Not Added)
+        </div>
+    </div><!-- /#detail-page -->
+
+    <script>
+        // All navigation is now just toggling the .visible class.
+        // No setTimeout, no overflow juggling — the fade handles everything.
+
+        function goToMain() {
+            document.getElementById('homescreen').classList.remove('visible');
+            const main = document.getElementById('main-page');
+            main.scrollTop = 0; // always start at top of main page
+            main.classList.add('visible');
+        }
+
+        function goHome() {
+            document.getElementById('main-page').classList.remove('visible');
+            document.getElementById('homescreen').classList.add('visible');
+            setTimeout(function() {
+                    document.getElementById('main-page').scrollTop = 0;
+                }, 600);
+        }
+
+        function openDetail(title, content, practice, spotifyUrl) {
+            document.getElementById('detail-title').innerText  = title;
+            document.getElementById('detail-text').innerText   = content;
+            document.getElementById('practice-text').innerText = practice;
+
+            const spotifySlot = document.getElementById('spotify-slot');
+            if (spotifyUrl && spotifyUrl.trim() !== '') {
+                spotifySlot.innerHTML = `<iframe
+                    style="border-radius:12px"
+                    src="${spotifyUrl}"
+                    width="100%"
+                    height="152"
+                    frameBorder="0"
+                    allowfullscreen=""
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"></iframe>`;
+                spotifySlot.style.border = 'none';
+            } else {
+                spotifySlot.innerHTML = 'Spotify Placeholder (Link Not Added)';
+                spotifySlot.style.border = '1px dashed rgba(255,255,255,0.3)';
+            }
+
+            const detail = document.getElementById('detail-page')
+            detail.scrollTop = 0;
+            detail.classList.add('visible');
+            //
+            //setTimeout(function() { detail.scrollTop = 0; }, 50);
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-page').classList.remove('visible');
+             document.getElementById('detail-page').scrollTop = 0;
+        }
+    </script>
+
+</body>
+</html>
